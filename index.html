@@ -2,61 +2,119 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#171b1c">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0e1214">
 <title>Toyota Hjawala 2027</title>
 <style>
-:root{color-scheme:dark}
+:root{color-scheme:dark;--amber:#ffb35c;--red:#ff5a3c;--green:#3ddc84;--glass:rgba(16,20,24,.46);--line:rgba(255,255,255,.22)}
 *{box-sizing:border-box;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#b7a080;font-family:Tahoma,Arial,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0e1214;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;color:#fff}
 canvas{display:block}
 #scene{position:fixed;inset:0}
-#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#171b1c;color:#fff;text-align:center;padding:24px}
-#loading .panel{width:min(340px,90vw)}
-#loading strong{font-size:22px;display:block;margin-bottom:12px}
-#progress{height:5px;background:#ffffff25;border-radius:8px;overflow:hidden;margin:18px 0}
-#bar{height:100%;width:0;background:#d18b42;transition:width .2s}
-#loading small{color:#c8c2b8;line-height:1.8}
-#loading.error{background:#291a17}
-#loadText{line-height:1.8}
-#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 5px #000b}
-#logo{position:absolute;top:14px;right:15px;font-weight:900;font-size:16px;letter-spacing:.7px}
-#logo span{color:#e5a65e}
-#speedPanel{position:absolute;top:13px;left:14px;min-width:92px;padding:8px 12px;border-radius:12px;background:#111c;border:1px solid #ffffff40;text-align:center}
-#speed{font-size:30px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums}
-#speedPanel small{font-size:10px}
-#scorePanel{position:absolute;left:14px;top:91px;background:#111b;border-radius:9px;padding:7px 10px;font-size:12px}
-#gearPanel{position:absolute;right:15px;top:43px;background:#111b;padding:6px 9px;border-radius:8px;font-size:11px}
-#controls{position:fixed;left:0;right:0;bottom:max(15px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;padding:0 15px;pointer-events:none}
-.group{display:flex;gap:9px;align-items:flex-end;pointer-events:auto}
-.btn{width:62px;height:62px;border-radius:50%;border:1.5px solid #ffffffa8;background:#15191bcc;color:white;display:grid;place-items:center;font-weight:bold;font-size:22px;box-shadow:0 3px 12px #0005;touch-action:none;user-select:none;-webkit-user-select:none}
-.btn:active,.btn.down{background:#c77b32;transform:scale(.96)}
-.btn.gas{width:70px;height:76px;background:#226e4cdd;font-size:24px}
-.btn.brake{background:#963d35dd}
-.btn.hand{font-size:13px;width:56px;height:56px}
-.side{position:fixed;pointer-events:auto;border:1px solid #ffffff70;border-radius:9px;padding:9px 12px;background:#15191bcc;color:#fff;font-size:11px;font-family:inherit}
-#reset{bottom:110px;left:15px}
-#cam{bottom:110px;right:14px}
-#flip{bottom:160px;left:15px}
-@media(min-width:850px){.btn{width:72px;height:72px}.btn.gas{width:80px;height:86px}}
+svg{display:block}
+
+/* ---------- شاشة التحميل ---------- */
+#loading{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#222a2e,#0b0e10);text-align:center;padding:24px}
+#loading .panel{width:min(340px,88vw)}
+#loading .ttl{font-size:26px;font-weight:900;letter-spacing:2px}
+#loading .ttl span{color:var(--amber)}
+#loadText{margin:14px 0 4px;line-height:1.8;color:#e9e4da}
+#progress{height:6px;background:#ffffff22;border-radius:8px;overflow:hidden;margin:14px 0}
+#bar{height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .25s}
+#loading small{color:#9da4a8;line-height:1.8}
+#loading.error{background:#2a1713}
+
+/* ---------- واجهة القيادة ---------- */
+#hud{position:fixed;inset:0;pointer-events:none;direction:ltr;text-shadow:0 2px 6px #000a}
+#gauge{position:absolute;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));width:min(34vw,140px);aspect-ratio:1}
+#gauge svg{width:100%;height:100%}
+#gauge circle{fill:none;stroke-width:7;stroke-linecap:round}
+#gauge .bg{fill:var(--glass);stroke:var(--line);stroke-width:1}
+#gauge .trk{stroke:rgba(255,255,255,.16)}
+.gnum{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1}
+.gnum b{font-size:clamp(28px,8.5vw,40px);font-weight:900;font-variant-numeric:tabular-nums}
+.gnum small{font-size:10px;color:#cfd4d6;margin-top:3px;direction:rtl}
+#gearBox{position:absolute;left:50%;bottom:10%;transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--amber);letter-spacing:1px}
+#rev{margin-top:8px;height:7px;border-radius:6px;background:var(--glass);border:1px solid var(--line);overflow:hidden;width:min(34vw,140px)}
+#revFill{display:block;height:100%;width:0;background:linear-gradient(90deg,#3ddc84,#ffd34d 65%,#ff4b3a)}
+#hudLeft{position:absolute;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left))}
+#scoreCard{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));min-width:112px;padding:9px 13px;border-radius:16px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);text-align:center;direction:rtl}
+#scoreCard .lbl{font-size:10px;color:#cfd4d6;letter-spacing:.5px}
+#scoreCard .val{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15}
+#scoreCard .best{font-size:10px;color:var(--amber);margin-top:2px}
+#driftPop{position:absolute;top:34%;left:50%;transform:translate(-50%,0) scale(.92);text-align:center;opacity:0;transition:opacity .18s,transform .18s}
+#driftPop.on{opacity:1;transform:translate(-50%,0) scale(1)}
+#driftPop .t{font-size:13px;font-weight:900;letter-spacing:6px;color:var(--amber)}
+#driftPop .p{font-size:40px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}
+#driftPop .m{font-size:15px;font-weight:800;color:#ffe0b0}
+#bankPop{position:absolute;top:34%;left:50%;transform:translate(-50%,0);font-size:30px;font-weight:900;color:#7dffb0;opacity:0;white-space:nowrap}
+#bankPop.show{animation:bank 1.3s ease-out}
+@keyframes bank{0%{opacity:0;transform:translate(-50%,14px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.12)}100%{opacity:0;transform:translate(-50%,-36px) scale(1)}}
+
+/* ---------- أزرار جانبية صغيرة ---------- */
+#tools{position:absolute;top:calc(max(12px,env(safe-area-inset-top)) + 84px);right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.tool{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center;padding:0}
+.tool svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tool:active{background:rgba(255,179,92,.45)}
+
+/* ---------- أزرار القيادة ---------- */
+#controls{position:fixed;left:0;right:0;bottom:max(16px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;padding:0 max(14px,env(safe-area-inset-left));pointer-events:none;direction:ltr}
+.group{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}
+.btn{border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:800;font-size:11px;touch-action:none;box-shadow:0 6px 18px #0006;transition:transform .06s,filter .06s}
+.btn svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.btn.down{transform:scale(.93);filter:brightness(1.45)}
+.steer{width:76px;height:76px;border-radius:24px}
+.gas{width:86px;height:122px;border-radius:28px;background:linear-gradient(180deg,rgba(61,220,132,.62),rgba(20,110,70,.62));border-color:rgba(130,255,190,.6)}
+.brake{width:74px;height:90px;border-radius:24px;background:linear-gradient(180deg,rgba(255,90,60,.62),rgba(140,40,30,.62));border-color:rgba(255,150,130,.6)}
+.hand{width:66px;height:66px;border-radius:50%;background:linear-gradient(180deg,rgba(255,179,92,.6),rgba(160,90,20,.6));border-color:rgba(255,210,150,.6)}
+@media(min-width:850px){.steer{width:88px;height:88px}.gas{width:98px;height:136px}.brake{width:84px;height:100px}.hand{width:76px;height:76px}}
 </style>
 </head>
 <body>
 <div id="scene"></div>
-<div id="loading"><div class="panel"><strong>TOYOTA HJAWALA</strong><div id="loadText">تحميل السيارة والطريق...</div><div id="progress"><div id="bar"></div></div><small>يرجى الانتظار حتى يكتمل تحميل ملفات المجسمات</small></div></div>
+
+<div id="loading"><div class="panel">
+ <div class="ttl">TOYOTA <span>HJAWALA</span></div>
+ <div id="loadText">تحميل السيارة والطريق...</div>
+ <div id="progress"><div id="bar"></div></div>
+ <small>يرجى الانتظار حتى يكتمل تحميل ملفات المجسمات</small>
+</div></div>
+
 <div id="hud">
- <div id="logo">TOYOTA <span>HJAWALA</span></div>
- <div id="speedPanel"><div id="speed">0</div><small>كم/س</small></div>
- <div id="scorePanel">نقاط التفحيط: <b id="score">0</b></div>
- <div id="gearPanel">وضع القيادة: <b id="mode">D</b></div>
+ <div id="hudLeft">
+  <div id="gauge" style="position:relative;top:auto;left:auto">
+   <svg viewBox="0 0 120 120">
+    <defs><linearGradient id="gg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffb35c"/><stop offset="1" stop-color="#ff5a3c"/></linearGradient></defs>
+    <circle class="bg" cx="60" cy="60" r="57"/>
+    <circle class="trk" cx="60" cy="60" r="47" transform="rotate(135 60 60)" stroke-dasharray="221.7 295.3"/>
+    <circle id="arc" cx="60" cy="60" r="47" transform="rotate(135 60 60)" stroke-dasharray="0 295.3" stroke="url(#gg)"/>
+   </svg>
+   <div class="gnum"><b id="speed">0</b><small>كم/س</small></div>
+   <div id="gearBox">GEAR <span id="gear">1</span></div>
+  </div>
+  <div id="rev"><i id="revFill"></i></div>
+ </div>
+ <div id="scoreCard"><div class="lbl">نقاط التفحيط</div><div class="val" id="score">0</div><div class="best">الأفضل: <span id="best">0</span></div></div>
+ <div id="driftPop"><div class="t">DRIFT</div><div class="p" id="dpPts">0</div><div class="m" id="dpMul">x1.0</div></div>
+ <div id="bankPop"></div>
+ <div id="tools">
+  <button class="tool" id="cam" title="تغيير الكاميرا"><svg viewBox="0 0 24 24"><path d="M3.5 8h3.2l1.8-2.2h7l1.8 2.2h3.2v11h-17z"/><circle cx="12" cy="13.2" r="3.4"/></svg></button>
+  <button class="tool" id="reset" title="إعادة السيارة"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 4.5v4h4"/></svg></button>
+  <button class="tool" id="flip" title="قلب اتجاه السيارة"><svg viewBox="0 0 24 24"><path d="M6 8h12l-3-3"/><path d="M18 16H6l3 3"/></svg></button>
+ </div>
 </div>
+
 <div id="controls">
- <div class="group"><div class="btn" data-control="left">◀</div><div class="btn" data-control="right">▶</div></div>
- <div class="group"><div class="btn brake" data-control="brake">فرامل</div><div class="btn hand" data-control="hand">هاند</div><div class="btn gas" data-control="gas">▲</div></div>
+ <div class="group">
+  <div class="btn steer" data-control="left"><svg viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7"/></svg></div>
+  <div class="btn steer" data-control="right"><svg viewBox="0 0 24 24"><path d="M9.5 5l7 7-7 7"/></svg></div>
+ </div>
+ <div class="group">
+  <div class="btn hand" data-control="hand">هاند</div>
+  <div class="btn brake" data-control="brake"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>فرامل</div>
+  <div class="btn gas" data-control="gas"><svg viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg>بنزين</div>
+ </div>
 </div>
-<button class="side" id="reset">إعادة السيارة</button>
-<button class="side" id="flip">قلب اتجاه السيارة</button>
-<button class="side" id="cam">تغيير الكاميرا</button>
 
 <!-- بدون هذا الـ importmap يفشل GLTFLoader ويبقى التحميل عند 0% -->
 <script type="importmap">
@@ -66,7 +124,7 @@ canvas{display:block}
 }}
 </script>
 
-<!-- كاشف أخطاء: يعرض سبب التوقف على شاشة التحميل بدل ما تبقى صامتة -->
+<!-- كاشف أخطاء: يعرض سبب التوقف على شاشة التحميل -->
 <script>
 (function(){
  function showErr(m){
@@ -86,13 +144,17 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 window.__started=true;
 
 /* ============ الإعدادات ============ */
-const S=0.0325;                 // مقياس موحد: وحدة الملف ≈ 3.25 سم  → السيارة ≈ 5.3 متر
-const ROAD_SIZE=16094392, CAR_SIZE=10467628;   // أحجام الملفات لشريط التحميل
-// نقاط منتصف الطريق (من بيانات الملف نفسه) بإحداثيات المجسم الأصلية [x, z]، من أسفل الطريق إلى أعلاه
+const S=0.0325;                       // وحدة الملف ≈ 3.25 سم → السيارة ≈ 5.3 م
+const ROAD_SIZE=16094392, CAR_SIZE=10467628;
+// نقاط منتصف الطريق (من بيانات الملف) بإحداثيات المجسم الأصلية [x, z]
 const CL_RAW=[[-958,4952],[-917,4663],[-882,4373],[-844,4084],[-811,3797],[-764,3487],[-707,3157],[-653,2834],[-599,2518],[-546,2230],[-486,1959],[-427,1657],[-376,1341],[-306,1048],[-224,772],[-136,478],[-58,159],[4,-160],[92,-482],[197,-786],[287,-1058],[379,-1330],[490,-1630],[586,-1950],[667,-2265],[773,-2562],[883,-2834],[980,-3123],[1083,-3446],[1188,-3761],[1264,-4054],[1320,-4348],[1369,-4656]];
 const CL=CL_RAW.map(([x,z])=>({x:x*S,z:z*S}));
-const START_IDX=2, LANE=3.0;    // نقطة البداية، وبعد المسار الأيمن عن المنتصف بالمتر
-const WHEELBASE_HALF=1.54, TRACK_HALF=0.8;   // نصف المسافة بين المحورين ونصف عرض العجلات (متر)
+// إزاحة وصل نسخة الطريق بنهاية النسخة السابقة (محسوبة من أطراف الطريق) — طريق طويل متصل
+const OFF={x:2393.7*S,y:343.7*S,z:-10017.8*S};
+const N_COPIES=6;                     // 6 نسخ ≈ 1.9 كم
+const START_K=1,START_IDX=2,LANE=3.0; // نسخة وموضع البداية، وبعد المسار الأيمن عن المنتصف (م)
+const WB=1.54,TH=0.8;                 // نصف المسافة بين المحورين ونصف عرض العجلات (م)
+const MAX_KMH=140;
 
 const $=id=>document.getElementById(id);
 const loading=$('loading'),loadText=$('loadText'),bar=$('bar');
@@ -100,19 +162,34 @@ const fail=m=>{loading.classList.add('error');loadText.textContent=m;bar.style.w
 const tick=()=>new Promise(r=>setTimeout(r,40));
 
 /* ============ المشهد ============ */
+const FOG=0xd7dde0;
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0xb9c7cc);
-scene.fog=new THREE.Fog(0xb9c7cc,120,700);
-const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,1500);
+scene.background=new THREE.Color(FOG);
+scene.fog=new THREE.Fog(FOG,140,720);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,1200);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
 $('scene').appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xe5f1ff,0x765638,1.7));
-const sun=new THREE.DirectionalLight(0xffe4bd,2.0);
-sun.position.set(-100,180,70);
+scene.add(new THREE.HemisphereLight(0xdcecff,0x7a5c3a,1.5));
+const sun=new THREE.DirectionalLight(0xffe0b0,2.2);
+sun.position.set(-120,170,90);
 scene.add(sun);
+
+// سماء متدرجة بدل اللون الواحد
+function makeSky(){
+ const c=document.createElement('canvas');c.width=2;c.height=256;
+ const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);
+ gr.addColorStop(0,'#2f6fb5');gr.addColorStop(.36,'#7fb2d8');gr.addColorStop(.49,'#d7dde0');gr.addColorStop(.56,'#ead9bd');gr.addColorStop(1,'#d9b88e');
+ g.fillStyle=gr;g.fillRect(0,0,2,256);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+ const m=new THREE.Mesh(new THREE.SphereGeometry(900,24,16),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false,depthWrite:false,toneMapped:false}));
+ m.renderOrder=-10;return m;
+}
+const sky=makeSky();scene.add(sky);
 
 /* ============ شبكة الارتفاعات: سطح الطريق للسيارة ============ */
 const CELL=0.6;
@@ -124,7 +201,6 @@ function buildGrid(root){
  const d=new Float32Array(w*h).fill(-1e9);
  const meshes=[];
  root.traverse(o=>{if(o.isMesh)meshes.push(o);});
- // العشب أولاً ثم الرصيف ثم الأسفلت (الأخير يغطي ما قبله)
  const prio=m=>/grass/i.test(m.material.name)?0:/side/i.test(m.material.name)?1:2;
  meshes.sort((a,b)=>prio(a)-prio(b));
  const v=new THREE.Vector3(),EPS=-1e-3;
@@ -154,9 +230,7 @@ function buildGrid(root){
  }
  G={x0,z0,w,h,d};
 }
-// ارتفاع سطح الأرض عند (x,z) — يرجع NaN خارج الخريطة
-function groundY(x,z){
- if(!G)return NaN;
+function gridY(x,z){
  const fx=(x-G.x0)/CELL,fz=(z-G.z0)/CELL,i=Math.floor(fx),j=Math.floor(fz);
  if(i<0||j<0||i>=G.w-1||j>=G.h-1)return NaN;
  const d=G.d,w=G.w,a=d[j*w+i],b=d[j*w+i+1],c=d[(j+1)*w+i],e=d[(j+1)*w+i+1];
@@ -168,8 +242,20 @@ function groundY(x,z){
  for(const q of [a,b,c,e])if(q>-1e8){s+=q;n++;}
  return n?s/n:NaN;
 }
+// الأرض عند (x,z) مع مراعاة نسخ الطريق المتكررة
+function groundY(x,z){
+ if(!G)return NaN;
+ const k0=Math.round(z/OFF.z);
+ for(const k of [k0,k0-1,k0+1]){
+  if(k<0||k>=N_COPIES)continue;
+  const h=gridY(x-OFF.x*k,z-OFF.z*k);
+  if(!isNaN(h))return h+OFF.y*k;
+ }
+ return NaN;
+}
 
 /* ============ تجهيز الطريق والسيارة ============ */
+const copies=[];
 function prepareRoad(gltf){
  const root=gltf.scene;
  root.scale.setScalar(S);
@@ -179,9 +265,13 @@ function prepareRoad(gltf){
   const m=o.material;m.side=THREE.DoubleSide;
   for(const k of ['map','metalnessMap','roughnessMap'])if(m[k])m[k].anisotropy=aniso;
  });
- scene.add(root);
  root.updateMatrixWorld(true);
- buildGrid(root);
+ buildGrid(root);                       // الشبكة تُبنى مرة واحدة وتُستخدم لكل النسخ
+ for(let k=0;k<N_COPIES;k++){
+  const c=k===0?root:root.clone(true);  // النسخ تتشارك نفس الهندسة والخامات (توفير ذاكرة)
+  c.position.set(OFF.x*k,OFF.y*k,OFF.z*k);
+  scene.add(c);copies.push(c);
+ }
 }
 function makeBlob(){
  const c=document.createElement('canvas');c.width=c.height=128;
@@ -195,8 +285,7 @@ function makeBlob(){
 let car=null,flip=null;
 function prepareCar(gltf){
  const model=gltf.scene,dead=[];
- // حذف خطوط التحديد (outline) غير المرئية: تقلل الحمل على الجوال
- model.traverse(o=>{if(o.isLine||o.isLineSegments||o.isPoints)dead.push(o);});
+ model.traverse(o=>{if(o.isLine||o.isLineSegments||o.isPoints)dead.push(o);});   // خطوط التحديد غير المرئية
  dead.forEach(o=>{if(o.geometry)o.geometry.dispose();if(o.parent)o.parent.remove(o);});
  model.traverse(o=>{
   if(!o.isMesh)return;
@@ -204,24 +293,25 @@ function prepareCar(gltf){
   if(m.transparent){m.depthWrite=false;m.side=THREE.FrontSide;o.renderOrder=2;}
   else m.side=THREE.DoubleSide;
  });
- // مركز الدوران = منتصف المسافة بين المحورين، والإطارات تلمس الأرض (قيم من بيانات الملف)
  model.scale.setScalar(S);
- model.position.set(-43.7*S,1.516*S,103.35*S);
- // مقدمة المجسم باتجاه +Z، واللعبة تعتبر الأمام -Z، فندوره 180 درجة
- flip=new THREE.Group();flip.rotation.y=Math.PI;flip.add(model);
+ model.position.set(-43.7*S,1.516*S,103.35*S);   // المركز عند منتصف المحورين والإطارات على الأرض
+ flip=new THREE.Group();flip.rotation.y=Math.PI;flip.add(model);   // المقدمة باتجاه -Z
  car=new THREE.Group();car.rotation.order='YXZ';
  car.add(flip);car.add(makeBlob());
  scene.add(car);
 }
 
-/* ============ مسار الطريق: أقرب نقطة، إعادة التموضع ============ */
+/* ============ مسار الطريق ============ */
 function nearest(x,z){
- let best=null;
- for(let i=0;i<CL.length-1;i++){
-  const a=CL[i],b=CL[i+1],dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz;
-  let t=((x-a.x)*dx+(z-a.z)*dz)/l2;t=Math.max(0,Math.min(1,t));
-  const cx=a.x+dx*t,cz=a.z+dz*t,d2=(x-cx)*(x-cx)+(z-cz)*(z-cz);
-  if(!best||d2<best.d2)best={i,d2,cx,cz,dx,dz,l:Math.sqrt(l2)};
+ const k0=Math.round(z/OFF.z);let best=null;
+ for(let k=k0-1;k<=k0+1;k++){
+  const ox=OFF.x*k,oz=OFF.z*k;
+  for(let i=0;i<CL.length-1;i++){
+   const ax=CL[i].x+ox,az=CL[i].z+oz,dx=CL[i+1].x-CL[i].x,dz=CL[i+1].z-CL[i].z,l2=dx*dx+dz*dz;
+   let t=((x-ax)*dx+(z-az)*dz)/l2;t=Math.max(0,Math.min(1,t));
+   const cx=ax+dx*t,cz=az+dz*t,d2=(x-cx)*(x-cx)+(z-cz)*(z-cz);
+   if(!best||d2<best.d2)best={k,i,d2,cx,cz,dx,dz,l:Math.sqrt(l2)};
+  }
  }
  best.tx=best.dx/best.l;best.tz=best.dz/best.l;
  best.lat=(x-best.cx)*(-best.tz)+(z-best.cz)*best.tx;   // موجب = يمين الطريق
@@ -236,7 +326,8 @@ const headingOf=t=>Math.atan2(-t.x,-t.z);
 
 /* ============ الحالة ============ */
 const state={left:false,right:false,gas:false,brake:false,hand:false};
-let speed=0,heading=0,sideVelocity=0,score=0,drift=0,camMode=0,camHead=0,pitchS=0,rollS=0,offTime=0,snap=true,firstGround=true;
+let speed=0,heading=0,sideVelocity=0,score=0,drift=0,driftT=0,best=0,camMode=0,camHead=0,pitchS=0,rollS=0,offTime=0,snap=true,firstGround=true,rpmS=.2;
+try{best=parseInt(localStorage.getItem('hjawala_best')||'0',10)||0;}catch(_){}
 const velocity=new THREE.Vector3(),fwd=new THREE.Vector3(),right=new THREE.Vector3(),followA=new THREE.Vector3(),lookAt=new THREE.Vector3(),clock=new THREE.Clock();
 
 function placeCar(x,z,h){
@@ -245,9 +336,15 @@ function placeCar(x,z,h){
  car.position.set(x,isNaN(y)?0:y,z);
  car.rotation.set(0,h,0,'YXZ');pitchS=0;rollS=0;
 }
-function spawnAt(idx,lat){
+function spawnAt(k,idx,lat){
  const t=tangentAt(idx),c=CL[idx];
- placeCar(c.x-t.z*lat,c.z+t.x*lat,headingOf(t));
+ placeCar(c.x+OFF.x*k-t.z*lat,c.z+OFF.z*k+t.x*lat,headingOf(t));
+}
+// نقل السيارة والكاميرا عدة نسخ للأمام/الخلف: الطريق متطابق فلا يُلاحظ أي قفز
+function shiftCopies(n){
+ const dx=OFF.x*n,dy=OFF.y*n,dz=OFF.z*n;
+ car.position.x+=dx;car.position.y+=dy;car.position.z+=dz;
+ camera.position.x+=dx;camera.position.y+=dy;camera.position.z+=dz;
 }
 
 /* ============ التحكم ============ */
@@ -270,10 +367,36 @@ const keyMap=e=>{
 addEventListener('keydown',e=>{const k=keyMap(e);if(k){state[k]=true;e.preventDefault();}});
 addEventListener('keyup',e=>{const k=keyMap(e);if(k){state[k]=false;e.preventDefault();}});
 addEventListener('blur',()=>{for(const k in state)state[k]=false;});
-$('reset').onclick=()=>{if(!car)return;speed=0;score=0;drift=0;spawnAt(START_IDX,LANE);};
+$('reset').onclick=()=>{if(!car)return;speed=0;score=0;drift=0;driftT=0;spawnAt(START_K,START_IDX,LANE);};
 $('flip').onclick=()=>{if(flip)flip.rotation.y+=Math.PI;};
 $('cam').onclick=()=>{camMode=(camMode+1)%3;};
 const CAMS=[{back:11,up:4.6},{back:17,up:7},{back:7,up:2.6}];
+
+/* ============ الواجهة ============ */
+const el={speed:$('speed'),arc:$('arc'),gear:$('gear'),rev:$('revFill'),score:$('score'),best:$('best'),dp:$('driftPop'),dpPts:$('dpPts'),dpMul:$('dpMul'),bank:$('bankPop')};
+const last={speed:-1,score:-1,gear:'',best:-1};
+const GEARS=[0,28,52,78,105,140];
+function showBank(p){
+ el.bank.textContent='+'+Math.floor(p).toLocaleString('en-US');
+ el.bank.classList.remove('show');void el.bank.offsetWidth;el.bank.classList.add('show');
+}
+function updateHud(kmh,reverse,dt){
+ const k=Math.round(kmh);
+ if(k!==last.speed){
+  el.speed.textContent=k;last.speed=k;
+  el.arc.setAttribute('stroke-dasharray',(Math.min(1,kmh/MAX_KMH)*221.7).toFixed(1)+' 295.3');
+ }
+ let g=1;for(let i=1;i<GEARS.length-1;i++)if(kmh>=GEARS[i])g=i+1;
+ const gs=reverse?'R':String(g);
+ if(gs!==last.gear){el.gear.textContent=gs;last.gear=gs;}
+ const lo=GEARS[g-1],hi=GEARS[g];
+ const target=kmh<1?(.2+(state.gas?.18:0)):.28+.66*Math.min(1,(kmh-lo)/(hi-lo));
+ rpmS+=(target-rpmS)*(1-Math.exp(-9*dt));
+ el.rev.style.width=Math.round(Math.min(1,rpmS)*100)+'%';
+ const sc=Math.floor(score+drift);
+ if(sc!==last.score){el.score.textContent=sc.toLocaleString('en-US');last.score=sc;}
+ if(best!==last.best){el.best.textContent=best.toLocaleString('en-US');last.best=best;}
+}
 
 /* ============ حلقة اللعبة ============ */
 const wheelY=(px,pz,f,l)=>groundY(px+fwd.x*f+right.x*l,pz+fwd.z*f+right.z*l);
@@ -281,7 +404,7 @@ function animate(){
  requestAnimationFrame(animate);
  const dt=Math.min(clock.getDelta(),.04);
 
- // --- القيادة (نفس الفيزياء السابقة؛ نطورها في المرحلة 3) ---
+ // --- القيادة (فيزياء مؤقتة؛ نطورها في المرحلة 3) ---
  const steer=(state.left?1:0)-(state.right?1:0);
  if(state.gas)speed+=13.5*dt;
  if(state.brake)speed-=22*dt;
@@ -298,17 +421,17 @@ function animate(){
  velocity.copy(fwd).multiplyScalar(speed).addScaledVector(right,sideVelocity);
  car.position.addScaledVector(velocity,dt);
 
- // --- التصاق السيارة بسطح الطريق (ارتفاع + ميل أمامي وجانبي) ---
+ // --- التصاق السيارة بسطح الطريق ---
  const px=car.position.x,pz=car.position.z;
- const hs=[wheelY(px,pz,WHEELBASE_HALF,-TRACK_HALF),wheelY(px,pz,WHEELBASE_HALF,TRACK_HALF),wheelY(px,pz,-WHEELBASE_HALF,-TRACK_HALF),wheelY(px,pz,-WHEELBASE_HALF,TRACK_HALF)];
+ const hs=[wheelY(px,pz,WB,-TH),wheelY(px,pz,WB,TH),wheelY(px,pz,-WB,-TH),wheelY(px,pz,-WB,TH)];
  const valid=hs.filter(v=>!isNaN(v));
  if(valid.length){
   offTime=0;
   const mean=valid.reduce((a,b)=>a+b,0)/valid.length;
   const [FL,FR,RL,RR]=hs.map(v=>isNaN(v)?mean:v);
   const y=(FL+FR+RL+RR)/4;
-  const pitch=Math.atan2((FL+FR)/2-(RL+RR)/2,2*WHEELBASE_HALF);
-  const roll=Math.atan2((FR+RR)/2-(FL+RL)/2,2*TRACK_HALF);
+  const pitch=Math.atan2((FL+FR)/2-(RL+RR)/2,2*WB);
+  const roll=Math.atan2((FR+RR)/2-(FL+RL)/2,2*TH);
   if(firstGround){car.position.y=y;pitchS=pitch;rollS=roll;firstGround=false;}
   else{
    const kt=1-Math.exp(-10*dt);
@@ -320,26 +443,34 @@ function animate(){
 
  // --- مراقبة المسار: تكرار الطريق، واسترجاع السيارة لو خرجت عنه ---
  const nr=nearest(car.position.x,car.position.z);
- if(nr.i>=CL.length-3&&speed>0){
-  // وصلنا لنهاية الطريق: نعيدك للبداية بنفس السرعة والوضعية
-  const rel=heading-headingOf({x:nr.tx,z:nr.tz});
-  const lat=THREE.MathUtils.clamp(nr.lat,-8,8);
-  const t=tangentAt(START_IDX),c=CL[START_IDX];
-  placeCar(c.x-t.z*lat,c.z+t.x*lat,headingOf(t)+rel);
- }else if(nr.dist>14||offTime>.8){
+ if(nr.k>=4){shiftCopies(-2);nr.k-=2;}
+ else if(nr.k<=0){shiftCopies(2);nr.k+=2;}
+ else if(nr.dist>14||offTime>.8){
   speed*=.4;
-  const idx=Math.max(1,Math.min(CL.length-4,nr.i));
-  spawnAt(idx,LANE);
+  spawnAt(nr.k,Math.max(1,Math.min(CL.length-4,nr.i)),LANE);
  }
+ for(let k=0;k<copies.length;k++)copies[k].visible=Math.abs(k-nr.k)<=2;   // نرسم النسخ القريبة فقط
 
- // --- النقاط والعدادات ---
+ // --- نقاط التفحيط ---
  const drifting=state.hand&&Math.abs(speed)>5&&Math.abs(steer)>.05;
- if(drifting)drift+=dt*Math.abs(speed)*2.1;else{score+=drift;drift=0;}
- $('score').textContent=Math.floor(score+drift).toLocaleString('en-US');
- $('speed').textContent=Math.round(Math.abs(speed)*3.6);
- $('mode').textContent=speed<-.5?'R':'D';
+ if(drifting){
+  driftT+=dt;
+  const mult=1+Math.min(4,driftT/2);
+  drift+=dt*Math.abs(speed)*2.1*mult;
+  el.dp.classList.add('on');
+  el.dpPts.textContent=Math.floor(drift).toLocaleString('en-US');
+  el.dpMul.textContent='x'+mult.toFixed(1);
+ }else if(drift>0||driftT>0){
+  el.dp.classList.remove('on');
+  if(drift>=30){
+   score+=drift;showBank(drift);
+   if(score>best){best=Math.floor(score);try{localStorage.setItem('hjawala_best',String(best));}catch(_){}}
+  }
+  drift=0;driftT=0;
+ }
+ updateHud(Math.abs(speed)*3.6,speed<-.5,dt);
 
- // --- الكاميرا: تتبع بتأخر بسيط في الدوران وتبقى فوق الأرض ---
+ // --- الكاميرا: تتبع بتأخر، وتوسيع زاوية الرؤية مع السرعة ---
  let dh=heading-camHead;dh=Math.atan2(Math.sin(dh),Math.cos(dh));
  camHead+=dh*(1-Math.exp(-5*dt));
  const cm=CAMS[camMode];
@@ -350,6 +481,9 @@ function animate(){
  else camera.position.lerp(followA,1-Math.exp(-8*dt));
  lookAt.set(car.position.x-Math.sin(camHead)*2,car.position.y+1.2,car.position.z-Math.cos(camHead)*2);
  camera.lookAt(lookAt);
+ const fovT=62+Math.min(1,Math.abs(speed)/38)*13;
+ if(Math.abs(fovT-camera.fov)>.05){camera.fov+=(fovT-camera.fov)*(1-Math.exp(-4*dt));camera.updateProjectionMatrix();}
+ sky.position.copy(camera.position);
 
  renderer.render(scene,camera);
 }
@@ -376,7 +510,7 @@ const loadGLB=(url,name,size,setP)=>new Promise((res,rej)=>{
   prepareRoad(roadGltf);
   loadText.textContent='جاري تجهيز السيارة...';bar.style.width='97%';await tick();
   prepareCar(carGltf);
-  spawnAt(START_IDX,LANE);
+  spawnAt(START_K,START_IDX,LANE);
   loadText.textContent='اكتمل التحميل';bar.style.width='100%';
   animate();
   setTimeout(()=>loading.style.display='none',400);
