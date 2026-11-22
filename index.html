@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#171b1c">
+<title>Toyota Hjawala 2027</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#b7a080;font-family:Tahoma,Arial,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block}
+#scene{position:fixed;inset:0}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#171b1c;color:#fff;text-align:center;padding:24px}
+#loading .panel{width:min(340px,90vw)}
+#loading strong{font-size:22px;display:block;margin-bottom:12px}
+#progress{height:5px;background:#ffffff25;border-radius:8px;overflow:hidden;margin:18px 0}
+#bar{height:100%;width:0;background:#d18b42;transition:width .2s}
+#loading small{color:#c8c2b8;line-height:1.8}
+#loading.error{background:#291a17}
+#loadText{line-height:1.8}
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 5px #000b}
+#logo{position:absolute;top:14px;right:15px;font-weight:900;font-size:16px;letter-spacing:.7px}
+#logo span{color:#e5a65e}
+#speedPanel{position:absolute;top:13px;left:14px;min-width:92px;padding:8px 12px;border-radius:12px;background:#111c;border:1px solid #ffffff40;text-align:center}
+#speed{font-size:30px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums}
+#speedPanel small{font-size:10px}
+#scorePanel{position:absolute;left:14px;top:91px;background:#111b;border-radius:9px;padding:7px 10px;font-size:12px}
+#gearPanel{position:absolute;right:15px;top:43px;background:#111b;padding:6px 9px;border-radius:8px;font-size:11px}
+#controls{position:fixed;left:0;right:0;bottom:max(15px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;padding:0 15px;pointer-events:none}
+.group{display:flex;gap:9px;align-items:flex-end;pointer-events:auto}
+.btn{width:62px;height:62px;border-radius:50%;border:1.5px solid #ffffffa8;background:#15191bcc;color:white;display:grid;place-items:center;font-weight:bold;font-size:22px;box-shadow:0 3px 12px #0005;touch-action:none;user-select:none;-webkit-user-select:none}
+.btn:active,.btn.down{background:#c77b32;transform:scale(.96)}
+.btn.gas{width:70px;height:76px;background:#226e4cdd;font-size:24px}
+.btn.brake{background:#963d35dd}
+.btn.hand{font-size:13px;width:56px;height:56px}
+.side{position:fixed;pointer-events:auto;border:1px solid #ffffff70;border-radius:9px;padding:9px 12px;background:#15191bcc;color:#fff;font-size:11px;font-family:inherit}
+#reset{bottom:110px;left:15px}
+#cam{bottom:110px;right:14px}
+#flip{bottom:160px;left:15px}
+@media(min-width:850px){.btn{width:72px;height:72px}.btn.gas{width:80px;height:86px}}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="loading"><div class="panel"><strong>TOYOTA HJAWALA</strong><div id="loadText">تحميل السيارة والطريق...</div><div id="progress"><div id="bar"></div></div><small>يرجى الانتظار حتى يكتمل تحميل ملفات المجسمات</small></div></div>
+<div id="hud">
+ <div id="logo">TOYOTA <span>HJAWALA</span></div>
+ <div id="speedPanel"><div id="speed">0</div><small>كم/س</small></div>
+ <div id="scorePanel">نقاط التفحيط: <b id="score">0</b></div>
+ <div id="gearPanel">وضع القيادة: <b id="mode">D</b></div>
+</div>
+<div id="controls">
+ <div class="group"><div class="btn" data-control="left">◀</div><div class="btn" data-control="right">▶</div></div>
+ <div class="group"><div class="btn brake" data-control="brake">فرامل</div><div class="btn hand" data-control="hand">هاند</div><div class="btn gas" data-control="gas">▲</div></div>
+</div>
+<button class="side" id="reset">إعادة السيارة</button>
+<button class="side" id="flip">قلب اتجاه السيارة</button>
+<button class="side" id="cam">تغيير الكاميرا</button>
+
+<!-- بدون هذا الـ importmap يفشل GLTFLoader ويبقى التحميل عند 0% -->
+<script type="importmap">
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+
+<!-- كاشف أخطاء: يعرض سبب التوقف على شاشة التحميل بدل ما تبقى صامتة -->
+<script>
+(function(){
+ function showErr(m){
+  var l=document.getElementById('loading'),t=document.getElementById('loadText');
+  if(!l||l.style.display==='none')return;
+  l.classList.add('error');if(t)t.textContent=m;
+ }
+ window.addEventListener('error',function(e){showErr('خطأ: '+(e.message||'غير معروف'));});
+ window.addEventListener('unhandledrejection',function(e){showErr('خطأ: '+((e.reason&&e.reason.message)||e.reason));});
+ setTimeout(function(){if(!window.__started)showErr('تعذر تشغيل اللعبة: تأكد من الإنترنت (مكتبة Three.js) أو حدّث المتصفح.');},9000);
+})();
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+window.__started=true;
+
+/* ============ الإعدادات ============ */
+const S=0.0325;                 // مقياس موحد: وحدة الملف ≈ 3.25 سم  → السيارة ≈ 5.3 متر
+const ROAD_SIZE=16094392, CAR_SIZE=10467628;   // أحجام الملفات لشريط التحميل
+// نقاط منتصف الطريق (من بيانات الملف نفسه) بإحداثيات المجسم الأصلية [x, z]، من أسفل الطريق إلى أعلاه
+const CL_RAW=[[-958,4952],[-917,4663],[-882,4373],[-844,4084],[-811,3797],[-764,3487],[-707,3157],[-653,2834],[-599,2518],[-546,2230],[-486,1959],[-427,1657],[-376,1341],[-306,1048],[-224,772],[-136,478],[-58,159],[4,-160],[92,-482],[197,-786],[287,-1058],[379,-1330],[490,-1630],[586,-1950],[667,-2265],[773,-2562],[883,-2834],[980,-3123],[1083,-3446],[1188,-3761],[1264,-4054],[1320,-4348],[1369,-4656]];
+const CL=CL_RAW.map(([x,z])=>({x:x*S,z:z*S}));
+const START_IDX=2, LANE=3.0;    // نقطة البداية، وبعد المسار الأيمن عن المنتصف بالمتر
+const WHEELBASE_HALF=1.54, TRACK_HALF=0.8;   // نصف المسافة بين المحورين ونصف عرض العجلات (متر)
+
+const $=id=>document.getElementById(id);
+const loading=$('loading'),loadText=$('loadText'),bar=$('bar');
+const fail=m=>{loading.classList.add('error');loadText.textContent=m;bar.style.width='100%';};
+const tick=()=>new Promise(r=>setTimeout(r,40));
+
+/* ============ المشهد ============ */
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xb9c7cc);
+scene.fog=new THREE.Fog(0xb9c7cc,120,700);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,1500);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+$('scene').appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xe5f1ff,0x765638,1.7));
+const sun=new THREE.DirectionalLight(0xffe4bd,2.0);
+sun.position.set(-100,180,70);
+scene.add(sun);
+
+/* ============ شبكة الارتفاعات: سطح الطريق للسيارة ============ */
+const CELL=0.6;
+let G=null;
+function buildGrid(root){
+ const box=new THREE.Box3().setFromObject(root);
+ const x0=box.min.x,z0=box.min.z;
+ const w=Math.ceil((box.max.x-x0)/CELL)+2,h=Math.ceil((box.max.z-z0)/CELL)+2;
+ const d=new Float32Array(w*h).fill(-1e9);
+ const meshes=[];
+ root.traverse(o=>{if(o.isMesh)meshes.push(o);});
+ // العشب أولاً ثم الرصيف ثم الأسفلت (الأخير يغطي ما قبله)
+ const prio=m=>/grass/i.test(m.material.name)?0:/side/i.test(m.material.name)?1:2;
+ meshes.sort((a,b)=>prio(a)-prio(b));
+ const v=new THREE.Vector3(),EPS=-1e-3;
+ for(const mesh of meshes){
+  const geo=mesh.geometry,pos=geo.attributes.position,n=pos.count,idx=geo.index;
+  const V=new Float32Array(n*3);
+  for(let i=0;i<n;i++){v.fromBufferAttribute(pos,i).applyMatrix4(mesh.matrixWorld);V[i*3]=v.x;V[i*3+1]=v.y;V[i*3+2]=v.z;}
+  const tc=(idx?idx.count:n)/3;
+  for(let t=0;t<tc;t++){
+   const ia=idx?idx.getX(t*3):t*3,ib=idx?idx.getX(t*3+1):t*3+1,ic=idx?idx.getX(t*3+2):t*3+2;
+   const ax=V[ia*3],ay=V[ia*3+1],az=V[ia*3+2],bx=V[ib*3],by=V[ib*3+1],bz=V[ib*3+2],cx=V[ic*3],cy=V[ic*3+1],cz=V[ic*3+2];
+   const det=(bz-cz)*(ax-cx)+(cx-bx)*(az-cz);
+   if(Math.abs(det)<1e-9)continue;
+   const i0=Math.max(0,Math.floor((Math.min(ax,bx,cx)-x0)/CELL)),i1=Math.min(w-1,Math.ceil((Math.max(ax,bx,cx)-x0)/CELL));
+   const j0=Math.max(0,Math.floor((Math.min(az,bz,cz)-z0)/CELL)),j1=Math.min(h-1,Math.ceil((Math.max(az,bz,cz)-z0)/CELL));
+   for(let j=j0;j<=j1;j++){
+    const pz=z0+j*CELL;
+    for(let i=i0;i<=i1;i++){
+     const px=x0+i*CELL;
+     const l1=((bz-cz)*(px-cx)+(cx-bx)*(pz-cz))/det;
+     const l2=((cz-az)*(px-cx)+(ax-cx)*(pz-cz))/det;
+     const l3=1-l1-l2;
+     if(l1>=EPS&&l2>=EPS&&l3>=EPS)d[j*w+i]=l1*ay+l2*by+l3*cy;
+    }
+   }
+  }
+ }
+ G={x0,z0,w,h,d};
+}
+// ارتفاع سطح الأرض عند (x,z) — يرجع NaN خارج الخريطة
+function groundY(x,z){
+ if(!G)return NaN;
+ const fx=(x-G.x0)/CELL,fz=(z-G.z0)/CELL,i=Math.floor(fx),j=Math.floor(fz);
+ if(i<0||j<0||i>=G.w-1||j>=G.h-1)return NaN;
+ const d=G.d,w=G.w,a=d[j*w+i],b=d[j*w+i+1],c=d[(j+1)*w+i],e=d[(j+1)*w+i+1];
+ if(a>-1e8&&b>-1e8&&c>-1e8&&e>-1e8){
+  const tx=fx-i,tz=fz-j;
+  return (a*(1-tx)+b*tx)*(1-tz)+(c*(1-tx)+e*tx)*tz;
+ }
+ let s=0,n=0;
+ for(const q of [a,b,c,e])if(q>-1e8){s+=q;n++;}
+ return n?s/n:NaN;
+}
+
+/* ============ تجهيز الطريق والسيارة ============ */
+function prepareRoad(gltf){
+ const root=gltf.scene;
+ root.scale.setScalar(S);
+ const aniso=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ root.traverse(o=>{
+  if(!o.isMesh)return;
+  const m=o.material;m.side=THREE.DoubleSide;
+  for(const k of ['map','metalnessMap','roughnessMap'])if(m[k])m[k].anisotropy=aniso;
+ });
+ scene.add(root);
+ root.updateMatrixWorld(true);
+ buildGrid(root);
+}
+function makeBlob(){
+ const c=document.createElement('canvas');c.width=c.height=128;
+ const g=c.getContext('2d'),gr=g.createRadialGradient(64,64,6,64,64,62);
+ gr.addColorStop(0,'rgba(0,0,0,.85)');gr.addColorStop(.6,'rgba(0,0,0,.45)');gr.addColorStop(1,'rgba(0,0,0,0)');
+ g.fillStyle=gr;g.fillRect(0,0,128,128);
+ const m=new THREE.Mesh(new THREE.PlaneGeometry(3.0,6.4),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,fog:false}));
+ m.rotation.x=-Math.PI/2;m.position.y=.05;m.renderOrder=1;
+ return m;
+}
+let car=null,flip=null;
+function prepareCar(gltf){
+ const model=gltf.scene,dead=[];
+ // حذف خطوط التحديد (outline) غير المرئية: تقلل الحمل على الجوال
+ model.traverse(o=>{if(o.isLine||o.isLineSegments||o.isPoints)dead.push(o);});
+ dead.forEach(o=>{if(o.geometry)o.geometry.dispose();if(o.parent)o.parent.remove(o);});
+ model.traverse(o=>{
+  if(!o.isMesh)return;
+  const m=o.material;
+  if(m.transparent){m.depthWrite=false;m.side=THREE.FrontSide;o.renderOrder=2;}
+  else m.side=THREE.DoubleSide;
+ });
+ // مركز الدوران = منتصف المسافة بين المحورين، والإطارات تلمس الأرض (قيم من بيانات الملف)
+ model.scale.setScalar(S);
+ model.position.set(-43.7*S,1.516*S,103.35*S);
+ // مقدمة المجسم باتجاه +Z، واللعبة تعتبر الأمام -Z، فندوره 180 درجة
+ flip=new THREE.Group();flip.rotation.y=Math.PI;flip.add(model);
+ car=new THREE.Group();car.rotation.order='YXZ';
+ car.add(flip);car.add(makeBlob());
+ scene.add(car);
+}
+
+/* ============ مسار الطريق: أقرب نقطة، إعادة التموضع ============ */
+function nearest(x,z){
+ let best=null;
+ for(let i=0;i<CL.length-1;i++){
+  const a=CL[i],b=CL[i+1],dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz;
+  let t=((x-a.x)*dx+(z-a.z)*dz)/l2;t=Math.max(0,Math.min(1,t));
+  const cx=a.x+dx*t,cz=a.z+dz*t,d2=(x-cx)*(x-cx)+(z-cz)*(z-cz);
+  if(!best||d2<best.d2)best={i,d2,cx,cz,dx,dz,l:Math.sqrt(l2)};
+ }
+ best.tx=best.dx/best.l;best.tz=best.dz/best.l;
+ best.lat=(x-best.cx)*(-best.tz)+(z-best.cz)*best.tx;   // موجب = يمين الطريق
+ best.dist=Math.sqrt(best.d2);
+ return best;
+}
+const tangentAt=i=>{
+ const a=CL[Math.max(0,i-1)],b=CL[Math.min(CL.length-1,i+1)];
+ const dx=b.x-a.x,dz=b.z-a.z,l=Math.hypot(dx,dz);return {x:dx/l,z:dz/l};
+};
+const headingOf=t=>Math.atan2(-t.x,-t.z);
+
+/* ============ الحالة ============ */
+const state={left:false,right:false,gas:false,brake:false,hand:false};
+let speed=0,heading=0,sideVelocity=0,score=0,drift=0,camMode=0,camHead=0,pitchS=0,rollS=0,offTime=0,snap=true,firstGround=true;
+const velocity=new THREE.Vector3(),fwd=new THREE.Vector3(),right=new THREE.Vector3(),followA=new THREE.Vector3(),lookAt=new THREE.Vector3(),clock=new THREE.Clock();
+
+function placeCar(x,z,h){
+ heading=h;camHead=h;sideVelocity=0;snap=true;firstGround=true;offTime=0;
+ const y=groundY(x,z);
+ car.position.set(x,isNaN(y)?0:y,z);
+ car.rotation.set(0,h,0,'YXZ');pitchS=0;rollS=0;
+}
+function spawnAt(idx,lat){
+ const t=tangentAt(idx),c=CL[idx];
+ placeCar(c.x-t.z*lat,c.z+t.x*lat,headingOf(t));
+}
+
+/* ============ التحكم ============ */
+document.querySelectorAll('[data-control]').forEach(el=>{
+ const k=el.dataset.control;
+ const down=e=>{e.preventDefault();try{el.setPointerCapture(e.pointerId);}catch(_){}state[k]=true;el.classList.add('down');};
+ const up=e=>{e.preventDefault();state[k]=false;el.classList.remove('down');};
+ el.addEventListener('pointerdown',down);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);
+ el.addEventListener('contextmenu',e=>e.preventDefault());
+});
+const keyMap=e=>{
+ const k=e.key.toLowerCase();
+ if(e.key==='ArrowLeft'||k==='a')return 'left';
+ if(e.key==='ArrowRight'||k==='d')return 'right';
+ if(e.key==='ArrowUp'||k==='w')return 'gas';
+ if(e.key==='ArrowDown'||k==='s')return 'brake';
+ if(e.code==='Space')return 'hand';
+ return null;
+};
+addEventListener('keydown',e=>{const k=keyMap(e);if(k){state[k]=true;e.preventDefault();}});
+addEventListener('keyup',e=>{const k=keyMap(e);if(k){state[k]=false;e.preventDefault();}});
+addEventListener('blur',()=>{for(const k in state)state[k]=false;});
+$('reset').onclick=()=>{if(!car)return;speed=0;score=0;drift=0;spawnAt(START_IDX,LANE);};
+$('flip').onclick=()=>{if(flip)flip.rotation.y+=Math.PI;};
+$('cam').onclick=()=>{camMode=(camMode+1)%3;};
+const CAMS=[{back:11,up:4.6},{back:17,up:7},{back:7,up:2.6}];
+
+/* ============ حلقة اللعبة ============ */
+const wheelY=(px,pz,f,l)=>groundY(px+fwd.x*f+right.x*l,pz+fwd.z*f+right.z*l);
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.04);
+
+ // --- القيادة (نفس الفيزياء السابقة؛ نطورها في المرحلة 3) ---
+ const steer=(state.left?1:0)-(state.right?1:0);
+ if(state.gas)speed+=13.5*dt;
+ if(state.brake)speed-=22*dt;
+ speed*=Math.pow(state.hand?.992:.997,dt*60);
+ speed*=Math.pow(.999,dt*60);
+ speed=THREE.MathUtils.clamp(speed,-8,38);
+ const grip=state.hand?.975:.88;
+ const steerFactor=THREE.MathUtils.clamp(Math.abs(speed)/7,.12,1);
+ heading+=steer*steerFactor*(state.hand?1.7:1.15)*dt*Math.sign(speed||1);
+ fwd.set(-Math.sin(heading),0,-Math.cos(heading));
+ right.set(Math.cos(heading),0,-Math.sin(heading));
+ const desiredSide=state.hand?steer*Math.abs(speed)*.24:steer*Math.abs(speed)*.035;
+ sideVelocity=THREE.MathUtils.lerp(sideVelocity,desiredSide,1-Math.pow(grip,dt*60));
+ velocity.copy(fwd).multiplyScalar(speed).addScaledVector(right,sideVelocity);
+ car.position.addScaledVector(velocity,dt);
+
+ // --- التصاق السيارة بسطح الطريق (ارتفاع + ميل أمامي وجانبي) ---
+ const px=car.position.x,pz=car.position.z;
+ const hs=[wheelY(px,pz,WHEELBASE_HALF,-TRACK_HALF),wheelY(px,pz,WHEELBASE_HALF,TRACK_HALF),wheelY(px,pz,-WHEELBASE_HALF,-TRACK_HALF),wheelY(px,pz,-WHEELBASE_HALF,TRACK_HALF)];
+ const valid=hs.filter(v=>!isNaN(v));
+ if(valid.length){
+  offTime=0;
+  const mean=valid.reduce((a,b)=>a+b,0)/valid.length;
+  const [FL,FR,RL,RR]=hs.map(v=>isNaN(v)?mean:v);
+  const y=(FL+FR+RL+RR)/4;
+  const pitch=Math.atan2((FL+FR)/2-(RL+RR)/2,2*WHEELBASE_HALF);
+  const roll=Math.atan2((FR+RR)/2-(FL+RL)/2,2*TRACK_HALF);
+  if(firstGround){car.position.y=y;pitchS=pitch;rollS=roll;firstGround=false;}
+  else{
+   const kt=1-Math.exp(-10*dt);
+   pitchS+=(pitch-pitchS)*kt;rollS+=(roll-rollS)*kt;
+   car.position.y+=(y-car.position.y)*(1-Math.exp(-25*dt));
+  }
+ }else offTime+=dt;
+ car.rotation.set(pitchS,heading,rollS,'YXZ');
+
+ // --- مراقبة المسار: تكرار الطريق، واسترجاع السيارة لو خرجت عنه ---
+ const nr=nearest(car.position.x,car.position.z);
+ if(nr.i>=CL.length-3&&speed>0){
+  // وصلنا لنهاية الطريق: نعيدك للبداية بنفس السرعة والوضعية
+  const rel=heading-headingOf({x:nr.tx,z:nr.tz});
+  const lat=THREE.MathUtils.clamp(nr.lat,-8,8);
+  const t=tangentAt(START_IDX),c=CL[START_IDX];
+  placeCar(c.x-t.z*lat,c.z+t.x*lat,headingOf(t)+rel);
+ }else if(nr.dist>14||offTime>.8){
+  speed*=.4;
+  const idx=Math.max(1,Math.min(CL.length-4,nr.i));
+  spawnAt(idx,LANE);
+ }
+
+ // --- النقاط والعدادات ---
+ const drifting=state.hand&&Math.abs(speed)>5&&Math.abs(steer)>.05;
+ if(drifting)drift+=dt*Math.abs(speed)*2.1;else{score+=drift;drift=0;}
+ $('score').textContent=Math.floor(score+drift).toLocaleString('en-US');
+ $('speed').textContent=Math.round(Math.abs(speed)*3.6);
+ $('mode').textContent=speed<-.5?'R':'D';
+
+ // --- الكاميرا: تتبع بتأخر بسيط في الدوران وتبقى فوق الأرض ---
+ let dh=heading-camHead;dh=Math.atan2(Math.sin(dh),Math.cos(dh));
+ camHead+=dh*(1-Math.exp(-5*dt));
+ const cm=CAMS[camMode];
+ followA.set(car.position.x+Math.sin(camHead)*cm.back,car.position.y+cm.up,car.position.z+Math.cos(camHead)*cm.back);
+ const gg=groundY(followA.x,followA.z);
+ if(!isNaN(gg))followA.y=Math.max(followA.y,gg+1.3);
+ if(snap){camera.position.copy(followA);snap=false;}
+ else camera.position.lerp(followA,1-Math.exp(-8*dt));
+ lookAt.set(car.position.x-Math.sin(camHead)*2,car.position.y+1.2,car.position.z-Math.cos(camHead)*2);
+ camera.lookAt(lookAt);
+
+ renderer.render(scene,camera);
+}
+
+addEventListener('resize',()=>{
+ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+});
+
+/* ============ التحميل ============ */
+const loader=new GLTFLoader();
+let roadPct=0,carPct=0;
+const setBar=()=>{bar.style.width=Math.round((roadPct*ROAD_SIZE+carPct*CAR_SIZE)/(ROAD_SIZE+CAR_SIZE)*90)+'%';};
+const loadGLB=(url,name,size,setP)=>new Promise((res,rej)=>{
+ loader.load(url,res,x=>{setP(Math.min(1,x.loaded/size));setBar();},e=>rej(new Error(name+': '+((e&&e.message)||'تعذر التحميل'))));
+});
+(async()=>{
+ try{
+  const [roadGltf,carGltf]=await Promise.all([
+   loadGLB('./assets/american_road.glb','الطريق',ROAD_SIZE,p=>roadPct=p),
+   loadGLB('./assets/toyota_hilux.glb','السيارة',CAR_SIZE,p=>carPct=p)
+  ]);
+  loadText.textContent='جاري تجهيز الطريق...';bar.style.width='92%';await tick();
+  prepareRoad(roadGltf);
+  loadText.textContent='جاري تجهيز السيارة...';bar.style.width='97%';await tick();
+  prepareCar(carGltf);
+  spawnAt(START_IDX,LANE);
+  loadText.textContent='اكتمل التحميل';bar.style.width='100%';
+  animate();
+  setTimeout(()=>loading.style.display='none',400);
+ }catch(e){
+  console.error(e);
+  fail('تعذر تحميل اللعبة — '+((e&&e.message)||e)+' (تأكد أن الملفات داخل مجلد assets)');
+ }
+})();
+</script>
+</body>
+</html>
