@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#171b1c">
+<title>Toyota Hjawala 2027</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#b7a080;font-family:Tahoma,Arial,sans-serif;touch-action:none}canvas{display:block}
+#scene{position:fixed;inset:0}
+#loading{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#171b1c;color:#fff;text-align:center;padding:24px}
+#loading .panel{width:min(340px,90vw)}#loading strong{font-size:22px;display:block;margin-bottom:12px}#progress{height:5px;background:#ffffff25;border-radius:8px;overflow:hidden;margin:18px 0}#bar{height:100%;width:0;background:#d18b42;transition:width .2s}
+#loading small{color:#c8c2b8;line-height:1.8}#loading.error{background:#291a17}
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 5px #000b}
+#logo{position:absolute;top:14px;right:15px;font-weight:900;font-size:16px;letter-spacing:.7px}
+#logo span{color:#e5a65e}
+#speedPanel{position:absolute;top:13px;left:14px;min-width:92px;padding:8px 12px;border-radius:12px;background:#111c;border:1px solid #ffffff40;text-align:center}
+#speed{font-size:30px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums}#speedPanel small{font-size:10px}
+#scorePanel{position:absolute;left:14px;top:91px;background:#111b;border-radius:9px;padding:7px 10px;font-size:12px}
+#gearPanel{position:absolute;right:15px;top:43px;background:#111b;padding:6px 9px;border-radius:8px;font-size:11px}
+#controls{position:fixed;left:0;right:0;bottom:max(15px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;padding:0 15px;pointer-events:none}
+.group{display:flex;gap:9px;align-items:flex-end;pointer-events:auto}
+.btn{width:62px;height:62px;border-radius:50%;border:1.5px solid #ffffffa8;background:#15191bcc;color:white;display:grid;place-items:center;font-weight:bold;font-size:22px;box-shadow:0 3px 12px #0005;touch-action:none;user-select:none;-webkit-user-select:none}
+.btn:active,.btn.down{background:#c77b32;transform:scale(.96)}
+.btn.gas{width:70px;height:76px;background:#226e4cdd;font-size:24px}.btn.brake{background:#963d35dd}.btn.hand{font-size:13px;width:56px;height:56px}
+#reset{position:fixed;bottom:110px;left:15px;pointer-events:auto;border:1px solid #ffffff70;border-radius:9px;padding:9px 12px;background:#15191bcc;color:#fff;font-size:11px}
+#cam{position:fixed;right:14px;bottom:110px;pointer-events:auto;border:1px solid #ffffff70;border-radius:9px;padding:9px 12px;background:#15191bcc;color:#fff;font-size:11px}
+#tip{position:absolute;right:15px;top:73px;font-size:10px;color:#fff9}
+@media(min-width:850px){.btn{width:72px;height:72px}.btn.gas{width:80px;height:86px}}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="loading"><div class="panel"><strong>TOYOTA HJAWALA</strong><div id="loadText">تحميل السيارة والطريق...</div><div id="progress"><div id="bar"></div></div><small>يرجى الانتظار حتى يكتمل تحميل ملفات المجسمات</small></div></div>
+<div id="hud">
+ <div id="logo">TOYOTA <span>HJAWALA</span></div>
+ <div id="speedPanel"><div id="speed">0</div><small>كم/س</small></div>
+ <div id="scorePanel">نقاط التفحيط: <b id="score">0</b></div>
+ <div id="gearPanel">وضع القيادة: <b id="mode">D</b></div>
+ <div id="tip">اسحب أزرار التحكم للقيادة والتفحيط</div>
+</div>
+<div id="controls">
+ <div class="group"><div class="btn" data-control="left">◀</div><div class="btn" data-control="right">▶</div></div>
+ <div class="group"><div class="btn brake" data-control="brake">فرامل</div><div class="btn hand" data-control="hand">هاند</div><div class="btn gas" data-control="gas">▲</div></div>
+</div>
+<button id="reset">إعادة السيارة</button><button id="cam">تغيير الكاميرا</button>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+
+const root=document.getElementById('scene');
+const loading=document.getElementById('loading'),loadText=document.getElementById('loadText'),bar=document.getElementById('bar');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xb9c7cc);scene.fog=new THREE.Fog(0xb9c7cc,100,650);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,1800);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;root.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xe5f1ff,0x765638,1.8));
+const sun=new THREE.DirectionalLight(0xffe4bd,2.1);sun.position.set(-100,180,70);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-180;sun.shadow.camera.right=180;sun.shadow.camera.top=180;sun.shadow.camera.bottom=-180;scene.add(sun);
+const loader=new GLTFLoader();
+let car=null,road=null,carReady=false,roadReady=false;
+function centerAndGround(obj,scale,verticalOffset=0){
+ // GLB files are already Y-up. Keep their original orientation.
+ const box=new THREE.Box3().setFromObject(obj);
+ const center=box.getCenter(new THREE.Vector3());
+ const minY=box.min.y;
+ obj.scale.setScalar(scale);
+ obj.position.set(-center.x*scale,-minY*scale+verticalOffset,-center.z*scale);
+ obj.traverse(o=>{
+  if(o.isMesh){
+   o.castShadow=true;
+   o.receiveShadow=true;
+   if(o.material)o.material.side=THREE.DoubleSide;
+  }
+ });
+}
+function fail(msg){loading.classList.add('error');loadText.textContent=msg;bar.style.width='100%';}
+loader.load('./assets/american_road.glb',g=>{
+ road=g.scene;
+ centerAndGround(road,.025,0);
+ scene.add(road);
+ roadReady=true;
+ bar.style.width='48%';
+ loadText.textContent='تم تحميل الطريق، تحميل السيارة...';
+ finish();
+},xhr=>{if(xhr.total)bar.style.width=Math.min(45,xhr.loaded/xhr.total*45)+'%';},e=>{
+ console.error(e);
+ fail('تعذر تحميل ملف الطريق. تأكد من وجود assets/american_road.glb.');
+});
+loader.load('./assets/toyota_hilux.glb',g=>{
+ // Move the model into a pivot so steering rotates it around its own center.
+ car=new THREE.Group();
+ const carModel=g.scene;
+ centerAndGround(carModel,.03,0);
+ car.add(carModel);
+ car.position.set(0,0,0);
+ scene.add(car);
+ carReady=true;
+ bar.style.width='90%';
+ finish();
+},xhr=>{if(xhr.total)bar.style.width=Math.max(48,48+xhr.loaded/xhr.total*40)+'%';},e=>{
+ console.error(e);
+ fail('تعذر تحميل السيارة. تأكد من وجود assets/toyota_hilux.glb.');
+});
+function finish(){if(carReady&&roadReady){loadText.textContent='اكتمل التحميل';bar.style.width='100%';setTimeout(()=>loading.style.display='none',450);}}
+
+const state={left:false,right:false,gas:false,brake:false,hand:false};
+document.querySelectorAll('[data-control]').forEach(el=>{
+ const k=el.dataset.control;
+ const down=e=>{e.preventDefault();state[k]=true;el.classList.add('down');};
+ const up=e=>{e.preventDefault();state[k]=false;el.classList.remove('down');};
+ el.addEventListener('pointerdown',down);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);
+});
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')state.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')state.right=true;if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')state.gas=true;if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')state.brake=true;if(e.code==='Space')state.hand=true;});
+addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')state.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')state.right=false;if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')state.gas=false;if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')state.brake=false;if(e.code==='Space')state.hand=false;});
+
+let speed=0,heading=0,sideVelocity=0,score=0,drift=0,camMode=0;
+const velocity=new THREE.Vector3(),clock=new THREE.Clock();
+const followA=new THREE.Vector3(),lookAt=new THREE.Vector3();
+document.getElementById('reset').onclick=()=>{if(!car)return;car.position.set(0,0,0);heading=0;speed=0;sideVelocity=0;score=0;drift=0;};
+document.getElementById('cam').onclick=()=>{camMode=(camMode+1)%3;};
+function animate(){
+ requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);
+ if(car){
+  const steer=(state.left?1:0)-(state.right?1:0);
+  if(state.gas)speed+=13.5*dt;if(state.brake)speed-=22*dt;
+  speed*=Math.pow((state.hand ? .992 : .997),dt*60);speed*=Math.pow(.999,dt*60);speed=THREE.MathUtils.clamp(speed,-8,38);
+  const grip=(state.hand ? .975 : .88);
+  const steerFactor=THREE.MathUtils.clamp(Math.abs(speed)/7,.12,1);
+  heading+=steer*steerFactor*(state.hand?1.7:1.15)*dt*Math.sign(speed||1);
+  const forward=new THREE.Vector3(-Math.sin(heading),0,-Math.cos(heading));
+  const right=new THREE.Vector3(Math.cos(heading),0,-Math.sin(heading));
+  const desiredSide=state.hand?steer*Math.abs(speed)*.24:steer*Math.abs(speed)*.035;
+  sideVelocity=THREE.MathUtils.lerp(sideVelocity,desiredSide,1-Math.pow(grip,dt*60));
+  velocity.copy(forward).multiplyScalar(speed).addScaledVector(right,sideVelocity);
+  car.position.addScaledVector(velocity,dt);
+  car.position.y=.25;car.rotation.y=heading;
+  const drifting=state.hand&&Math.abs(speed)>5&&Math.abs(steer)>.05;
+  if(drifting)drift+=dt*Math.abs(speed)*2.1;else{score+=drift;drift=0;}
+  document.getElementById('score').textContent=Math.floor(score+drift).toLocaleString('en-US');
+  document.getElementById('speed').textContent=Math.round(Math.abs(speed)*3.6);
+  document.getElementById('mode').textContent=speed<-.5?'R':'D';
+  const back=camMode===0?10:camMode===1?15:7,up=camMode===2?3.2:5.2;
+  followA.set(car.position.x+Math.sin(heading)*back,car.position.y+up,car.position.z+Math.cos(heading)*back);
+  camera.position.lerp(followA,1-Math.pow(.001,dt));
+  lookAt.set(car.position.x,car.position.y+1.25,car.position.z);
+  camera.lookAt(lookAt);
+ }
+ renderer.render(scene,camera);
+}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));});
+</script>
+</body></html>
